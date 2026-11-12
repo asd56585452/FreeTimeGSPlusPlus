@@ -1,0 +1,25 @@
+# FreeTimeGS++ final preset (configs/dynerf/ftgspp/flame_salmon.toml) without UFM motion-adapted init.
+# Config.load resolves only one 'extends' level, so ftgspp overrides are repeated here.
+extends = "../../dynerf/ftgs/flame_salmon.toml"
+
+[data]
+video_path = "/media/tsaichenghan/2TBSSD/datasets/flame_salmon_1"
+calibration_path = "/media/tsaichenghan/2TBSSD/datasets/flame_salmon_1/poses_bounds.npy"
+extracted_path = "_extracted/flame_salmon_1"
+memmap_path = "_memmap/flame_salmon_1"
+colmap_path = "_colmap/flame_salmon_1"
+eval_cameras = { "start" = 0, "stop" = 1 }
+train_cameras = { "start" = 1, "stop" = 19 }
+
+[init]
+points_path = "_points/flame_salmon_1"
+temporal_motion_adapted = false
+
+[train]
+color_correction = true
+color_correction_start = 3000
+color_corrector_weight = 1e-3
+
+[model]
+max_duration = 1
+marginal_gating = true

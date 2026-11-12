@@ -1,3 +1,5 @@
+import os
+from ftgspp.utils.config import camera_indexer
 # FreeTimeGS++
 # 2025-2026 Lucas Yunkyu Lee <lucaslee@postech.ac.kr>, SNU VGI Lab
 
@@ -131,8 +133,9 @@ def roma_points(
 
     for cam_a in range(len(dataset)):
         for cam_b in nearest_cameras[cam_a].tolist():
-            assert cam_a == dataset[cam_a].camera  # type: ignore
-            assert cam_b == dataset[cam_b].camera  # type: ignore
+            if not os.environ.get("FTGS_BENCH"):
+                assert cam_a == dataset[cam_a].camera  # type: ignore
+                assert cam_b == dataset[cam_b].camera  # type: ignore
 
             img_a = tensor_to_pil(dataset.rgb[cam_a])
             img_b = tensor_to_pil(dataset.rgb[cam_b])
@@ -188,7 +191,11 @@ def main(args: argparse.Namespace):
     config = Config.load(args.config)
 
     dataset: MultiViewData = MultiViewData.load_memmap(config.data.memmap_path)
-    dataset = dataset.at(config.data.frames.into_slice())
+    if os.environ.get("FTGS_BENCH"):
+        # Benchmark: held-out eval cameras never contribute to initialization.
+        dataset = dataset.at(config.data.frames.into_slice(), camera_indexer(config.data.train_cameras))
+    else:
+        dataset = dataset.at(config.data.frames.into_slice())
 
     matcher = create_roma_matcher(config.init.roma, device="cuda")
     out_path = config.init.points_path

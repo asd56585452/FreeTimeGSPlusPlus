@@ -1,0 +1,25 @@
+# FreeTimeGS++ final preset (configs/dynerf/ftgspp/coffee_martini.toml) without UFM motion-adapted init.
+# Config.load resolves only one 'extends' level, so ftgspp overrides are repeated here.
+extends = "../../dynerf/ftgs/coffee_martini.toml"
+
+[data]
+video_path = "/media/tsaichenghan/2TBSSD/datasets/coffee_martini"
+calibration_path = "/media/tsaichenghan/2TBSSD/datasets/coffee_martini/poses_bounds.npy"
+extracted_path = "_extracted/coffee_martini"
+memmap_path = "_memmap/coffee_martini"
+colmap_path = "_colmap/coffee_martini"
+eval_cameras = { "start" = 0, "stop" = 1 }
+train_cameras = { "start" = 1, "stop" = 18 }
+
+[init]
+points_path = "_points/coffee_martini"
+temporal_motion_adapted = false
+
+[train]
+color_correction = true
+color_correction_start = 3000
+color_corrector_weight = 1e-3
+
+[model]
+max_duration = 1
+marginal_gating = true

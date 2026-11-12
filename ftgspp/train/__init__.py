@@ -115,6 +115,8 @@ class Trainer(Pipeline):
             cfg.train.color_corrector_weight if cfg.train.color_correction else 0.0
         )
 
+        import json as _json, os as _os, time as _time
+        torch.cuda.synchronize(); torch.cuda.reset_peak_memory_stats(); _t0 = _time.perf_counter()
         gs = train(
             gs=gs,
             color_correctors=color_correctors,
@@ -157,6 +159,11 @@ class Trainer(Pipeline):
         gs.save(self.run_path / "gaussians.pt")
         if color_correctors is not None:
             torch.save(color_correctors, self.run_path / "color_correctors.pt")
+        torch.cuda.synchronize()
+        if _os.environ.get("FTGS_BENCH"):
+            (self.run_path / "benchmark_train.json").write_text(_json.dumps(dict(
+                train_recon_time=_time.perf_counter() - _t0, peak_vram_gib=torch.cuda.max_memory_allocated() / 1024**3,
+                num_gaussians=len(gs), definition="optimisation + final save; dataset loading and init excluded; in-loop eval disabled"), indent=2))
 
         self.logger.info("Done training")
 

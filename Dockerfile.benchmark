@@ -1,0 +1,80 @@
+# FreeTimeGS++ benchmark image for RTX 5070 (sm_120): CUDA 12.8, Python 3.12, uv lockfile.
+# Same system deps and Ceres/COLMAP 3.12.3 source build as upstream (required by the git-pinned
+# pycolmap), with CUDA_ARCH=120; Python env from uv.lock; CUDA extensions built for sm_120 without a GPU. Build: no GPU needed.
+FROM nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive LANG=C.UTF-8 LC_ALL=C.UTF-8 \
+    TORCH_CUDA_ARCH_LIST="12.0" TCNN_CUDA_ARCHITECTURES=120 FORCE_CUDA=1 MAX_JOBS=6 \
+    UV_PROJECT_ENVIRONMENT=/opt/venv UV_PYTHON_INSTALL_DIR=/opt/uv-python UV_LINK_MODE=copy \
+    UV_CACHE_DIR=/tmp/uv-cache PATH=/opt/venv/bin:/root/.local/bin:$PATH \
+    PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    zsh git zip unzip curl wget ca-certificates locales sudo gosu \
+    openssh-client \
+    build-essential cmake ninja-build pkg-config \
+    tmux vim less tree \
+    ffmpeg libgl1 libglib2.0-0 \
+    libeigen3-dev libsuitesparse-dev \
+    libgoogle-glog-dev libgflags-dev \
+    libboost-all-dev libsqlite3-dev \
+    libflann-dev liblz4-dev \
+    libcgal-dev libmetis-dev libfreeimage-dev \
+    mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev libglx-dev \
+    libopengl-dev libglew-dev \
+&& rm -rf /var/lib/apt/lists/* \
+&& (locale-gen en_US.UTF-8 >/dev/null 2>&1 || true)
+
+RUN apt-get update && apt-get install -y --no-install-recommends jq && rm -rf /var/lib/apt/lists/*
+
+ARG CERES_VERSION=2.1.0
+ARG COLMAP_VERSION=3.12.3
+ENV Ceres_DIR=/usr/local/lib/cmake/Ceres colmap_DIR=/usr/local/share/colmap CMAKE_PREFIX_PATH=/usr/local \
+    LD_LIBRARY_PATH=/usr/local/lib:/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+# Build & install Ceres
+RUN git clone https://github.com/ceres-solver/ceres-solver.git /tmp/ceres-solver \
+&& cd /tmp/ceres-solver \
+&& git checkout ${CERES_VERSION} \
+&& cmake -S . -B build -GNinja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DBUILD_TESTING=OFF \
+    -DBUILD_EXAMPLES=OFF \
+    -DBUILD_SHARED_LIBS=ON \
+    -DCERES_USE_CUDA=ON \
+    -DCMAKE_CUDA_ARCHITECTURES=120 \
+&& cmake --build build -j6 \
+&& cmake --install build \
+&& rm -rf /tmp/ceres-solver \
+&& echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf \
+&& ldconfig
+
+# Build & install COLMAP (headless)
+RUN git clone https://github.com/colmap/colmap.git /tmp/colmap \
+&& cd /tmp/colmap \
+&& git checkout ${COLMAP_VERSION} \
+&& cmake -S . -B build -GNinja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr/local \
+    -DCMAKE_CUDA_ARCHITECTURES=120 \
+    -DGUI_ENABLED=OFF \
+&& cmake --build build -j6 \
+&& cmake --install build \
+&& rm -rf /tmp/colmap
+
+RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh \
+ && uv python install 3.12
+
+WORKDIR /opt/ftgspp
+COPY pyproject.toml uv.lock ./
+# Dependencies only (project source is mounted at runtime / copied below).
+RUN uv sync --frozen --group with-torch --no-install-project && rm -rf /tmp/uv-cache
+# gsplat 1.5.3 (version pinned by upstream README), compiled ahead of time for sm_120.
+RUN uv pip install --no-build-isolation "git+https://github.com/nerfstudio-project/gsplat.git@v1.5.3" \
+ && rm -rf /tmp/uv-cache
+COPY . /opt/ftgspp
+RUN uv pip install --no-deps --no-build-isolation -e /opt/ftgspp && rm -rf /tmp/uv-cache \
+ && python -c "import torch, gsplat, fused_ssim, romatch, pycolmap; print(torch.__version__, torch.version.cuda, gsplat.__version__)"
+
+WORKDIR /workspace
+CMD ["/bin/bash"]

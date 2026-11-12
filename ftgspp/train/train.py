@@ -1,3 +1,5 @@
+import os
+_BENCH = bool(os.environ.get("FTGS_BENCH"))
 # FreeTimeGS++
 # 2025-2026 Lucas Yunkyu Lee <lucaslee@postech.ac.kr>, SNU VGI Lab
 
@@ -255,7 +257,7 @@ def train(
                 ).mean()["psnr"]
                 logger.info(f"Checkpoint {it:05d} PSNR {psnr:.2f}")
 
-        if it % 500 == 0:
+        if it % 500 == 0 and not _BENCH:
             with torch.inference_mode():
                 psnr = eval_rgb(
                     gs=gs,

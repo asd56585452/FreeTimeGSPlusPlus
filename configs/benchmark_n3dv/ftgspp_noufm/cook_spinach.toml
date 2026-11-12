@@ -1,0 +1,25 @@
+# FreeTimeGS++ final preset (configs/dynerf/ftgspp/cook_spinach.toml) without UFM motion-adapted init.
+# Config.load resolves only one 'extends' level, so ftgspp overrides are repeated here.
+extends = "../../dynerf/ftgs/cook_spinach.toml"
+
+[data]
+video_path = "/media/tsaichenghan/2TBSSD/datasets/cook_spinach"
+calibration_path = "/media/tsaichenghan/2TBSSD/datasets/cook_spinach/poses_bounds.npy"
+extracted_path = "_extracted/cook_spinach"
+memmap_path = "_memmap/cook_spinach"
+colmap_path = "_colmap/cook_spinach"
+eval_cameras = { "start" = 0, "stop" = 1 }
+train_cameras = { "start" = 1, "stop" = 21 }
+
+[init]
+points_path = "_points/cook_spinach"
+temporal_motion_adapted = false
+
+[train]
+color_correction = true
+color_correction_start = 3000
+color_corrector_weight = 1e-3
+
+[model]
+max_duration = 1
+marginal_gating = true

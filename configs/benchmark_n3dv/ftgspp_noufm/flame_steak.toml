@@ -1,0 +1,25 @@
+# FreeTimeGS++ final preset (configs/dynerf/ftgspp/flame_steak.toml) without UFM motion-adapted init.
+# Config.load resolves only one 'extends' level, so ftgspp overrides are repeated here.
+extends = "../../dynerf/ftgs/flame_steak.toml"
+
+[data]
+video_path = "/media/tsaichenghan/2TBSSD/datasets/flame_steak"
+calibration_path = "/media/tsaichenghan/2TBSSD/datasets/flame_steak/poses_bounds.npy"
+extracted_path = "_extracted/flame_steak"
+memmap_path = "_memmap/flame_steak"
+colmap_path = "_colmap/flame_steak"
+eval_cameras = { "start" = 0, "stop" = 1 }
+train_cameras = { "start" = 1, "stop" = 21 }
+
+[init]
+points_path = "_points/flame_steak"
+temporal_motion_adapted = false
+
+[train]
+color_correction = true
+color_correction_start = 3000
+color_corrector_weight = 1e-3
+
+[model]
+max_duration = 1
+marginal_gating = true

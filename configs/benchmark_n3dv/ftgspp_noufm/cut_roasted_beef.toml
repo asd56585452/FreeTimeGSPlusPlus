@@ -1,0 +1,25 @@
+# FreeTimeGS++ final preset (configs/dynerf/ftgspp/cut_roasted_beef.toml) without UFM motion-adapted init.
+# Config.load resolves only one 'extends' level, so ftgspp overrides are repeated here.
+extends = "../../dynerf/ftgs/cut_roasted_beef.toml"
+
+[data]
+video_path = "/media/tsaichenghan/2TBSSD/datasets/cut_roasted_beef"
+calibration_path = "/media/tsaichenghan/2TBSSD/datasets/cut_roasted_beef/poses_bounds.npy"
+extracted_path = "_extracted/cut_roasted_beef"
+memmap_path = "_memmap/cut_roasted_beef"
+colmap_path = "_colmap/cut_roasted_beef"
+eval_cameras = { "start" = 0, "stop" = 1 }
+train_cameras = { "start" = 1, "stop" = 20 }
+
+[init]
+points_path = "_points/cut_roasted_beef"
+temporal_motion_adapted = false
+
+[train]
+color_correction = true
+color_correction_start = 3000
+color_corrector_weight = 1e-3
+
+[model]
+max_duration = 1
+marginal_gating = true

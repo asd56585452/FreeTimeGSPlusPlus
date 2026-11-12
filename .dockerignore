@@ -1,0 +1,9 @@
+.git
+**/__pycache__
+_run
+_extracted
+_memmap
+_points
+_colmap
+_flow
+.venv
