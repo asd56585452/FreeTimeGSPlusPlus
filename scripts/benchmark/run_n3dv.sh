@@ -8,7 +8,7 @@ RUN="${1:-/media/tsaichenghan/2TBSSD/FreeTimeGSPlusPlus/benchmark_20261113}"; sh
 SCENES="${*:-coffee_martini cook_spinach cut_roasted_beef flame_salmon_1 flame_steak sear_steak}"
 RAW=/media/tsaichenghan/2TBSSD/datasets
 case "$RUN" in /media/tsaichenghan/2TBSSD/FreeTimeGSPlusPlus/benchmark_*) ;; *) echo "use a benchmark_* dir" >&2; exit 1;; esac
-mkdir -p "$RUN/work" "$RUN/output" "$RUN/cache"
+mkdir -p "$RUN/work" "$RUN/output" "$RUN/cache/tcnn_rtc"
 CODE="$RUN/code"
 if [ ! -d "$CODE" ]; then   # freeze + hash the exact code used
   mkdir -p "$CODE"; rsync -a --exclude .git --exclude __pycache__ "$REPO"/{ftgspp,configs,scripts,pyproject.toml} "$CODE/"
@@ -24,6 +24,7 @@ for S in $SCENES; do
   echo "=== $S $(date -Is)"
   docker run --rm --name ftgspp-n3dv --gpus all --shm-size 8g --memory 22g --memory-swap 22g --user "$(id -u):$(id -g)" \
     -e FTGS_NUM_WORKERS=4 \
+    -v "$RUN/cache/tcnn_rtc:/opt/venv/lib/python3.12/site-packages/tinycudann/rtc/cache" \
     -e HOME=/tmp -e XDG_CACHE_HOME="$RUN/cache" -e TORCH_HOME="$RUN/cache/torch" -e HF_HOME="$RUN/cache/hf" \
     -e PYTHONUNBUFFERED=1 -w "$RUN/work" \
     -v "$CODE:/opt/ftgspp:ro" -v "$RAW:$RAW:ro" -v "$RUN:$RUN" asdggg/freetimegspp:latest \
