@@ -29,7 +29,11 @@ for S in $SCENES; do
     -e PYTHONUNBUFFERED=1 -w "$RUN/work" \
     -v "$CODE:/opt/ftgspp:ro" -v "$RAW:$RAW:ro" -v "$RUN:$RUN" asdggg/freetimegspp:latest \
     bash -c "python /opt/ftgspp/scripts/benchmark/run_scene.py /opt/ftgspp/configs/benchmark_n3dv/ftgspp_noufm/$S.toml $O \
-             && python /opt/ftgspp/scripts/benchmark/eval_unified.py $O $RAW/$S" 2>&1 | tee -a "$O.log"
+" 2>&1 | tee -a "$O.log"
+  # Unified eval in the same image as unified_eval_20261108 (has lpips v0.1 weights).
+  docker run --rm --name ftgspp-eval --gpus all --user "$(id -u):$(id -g)" -e HOME=/tmp -e TORCH_HOME=/torch-cache \
+    -v /home/tsaichenghan/.cache/torch:/torch-cache:ro -v "$CODE:/opt/ftgspp:ro" -v "$RAW:$RAW:ro" -v "$RUN:$RUN" -w /tmp \
+    asdggg/3dgstream:latest python3 /opt/ftgspp/scripts/benchmark/eval_unified.py "$O" "$RAW/$S" 2>&1 | grep -E "UNIFIED|Error|alignment" | tee -a "$O.log"
   [ -f "$O/unified_metrics.json" ] || { echo "scene $S failed" >&2; exit 1; }
   date -Is > "$O/DONE.json"
   rm -rf "$RUN/work/_extracted/$S" "$RUN/work/_memmap/$S" "$RUN/work/_points/$S"   # only this run's intermediates
