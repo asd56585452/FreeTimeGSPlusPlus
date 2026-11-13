@@ -10,6 +10,9 @@ type PathLike = str | os.PathLike
 
 
 def num_workers() -> int:
+    # Benchmark: cap decode workers (each holds full-res frames in RAM); results are unaffected.
+    if os.environ.get("FTGS_NUM_WORKERS"):
+        return int(os.environ["FTGS_NUM_WORKERS"])
     return len(os.sched_getaffinity(0))
 
 

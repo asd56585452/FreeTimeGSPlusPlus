@@ -4,7 +4,7 @@
 #   bash scripts/benchmark/run_n3dv.sh [RUN_ROOT] [scene ...]
 set -euo pipefail
 REPO="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
-RUN="${1:-/media/tsaichenghan/2TBSSD/FreeTimeGSPlusPlus/benchmark_20261112}"; shift || true
+RUN="${1:-/media/tsaichenghan/2TBSSD/FreeTimeGSPlusPlus/benchmark_20261113}"; shift || true
 SCENES="${*:-coffee_martini cook_spinach cut_roasted_beef flame_salmon_1 flame_steak sear_steak}"
 RAW=/media/tsaichenghan/2TBSSD/datasets
 case "$RUN" in /media/tsaichenghan/2TBSSD/FreeTimeGSPlusPlus/benchmark_*) ;; *) echo "use a benchmark_* dir" >&2; exit 1;; esac
@@ -22,7 +22,8 @@ for S in $SCENES; do
   [ -f "$O/DONE.json" ] && { echo "SKIP $S"; continue; }
   AVAIL=$(df -BG --output=avail "$RUN" | tail -1 | tr -dc 0-9); [ "$AVAIL" -ge 80 ] || { echo "less than 80G free" >&2; exit 1; }
   echo "=== $S $(date -Is)"
-  docker run --rm --name ftgspp-n3dv --gpus all --shm-size 16g --user "$(id -u):$(id -g)" \
+  docker run --rm --name ftgspp-n3dv --gpus all --shm-size 8g --memory 22g --memory-swap 22g --user "$(id -u):$(id -g)" \
+    -e FTGS_NUM_WORKERS=4 \
     -e HOME=/tmp -e XDG_CACHE_HOME="$RUN/cache" -e TORCH_HOME="$RUN/cache/torch" -e HF_HOME="$RUN/cache/hf" \
     -e PYTHONUNBUFFERED=1 -w "$RUN/work" \
     -v "$CODE:/opt/ftgspp:ro" -v "$RAW:$RAW:ro" -v "$RUN:$RUN" asdggg/freetimegspp:latest \
