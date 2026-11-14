@@ -1,6 +1,6 @@
 """Build Google Sheet rows for FreeTimeGS++ (no UFM) from benchmark_20261113 (read-only on run outputs).
 
-Init = extract + sfm + prep + RoMa points + init (stage_times.json). Train = optimisation + final save
+Init = sfm + prep + RoMa points + init (video decode 'extract' excluded) (stage_times.json). Train = optimisation + final save
 (benchmark_train.json). VRAM = training peak. FPS = rasterization only, 20 warmup. Size = gaussians.pt.
 FreeTimeGS++ trains all 300 frames jointly: treated as one 300-frame GoF (GoF_ID 0, frames 0-299).
 """
@@ -13,7 +13,8 @@ OUT = Path(sys.argv[1]); OUT.mkdir(parents=True, exist_ok=True)
 SCENES = ['sear_steak', 'coffee_martini', 'cook_spinach', 'cut_roasted_beef', 'flame_salmon_1', 'flame_steak']
 NAME = 'FreeTimeGS++ (no UFM)'
 DATE = '2026-11-13'
-INIT = ['extract', 'sfm', 'prep', 'points', 'init']
+# 2026-11-14: video decode (extract) excluded, as for all other methods (they read pre-extracted frames).
+INIT = ['sfm', 'prep', 'points', 'init']
 r = lambda x, n: round(float(x), n)
 r2, r3, r4, agg = [], [], [], []
 for s in SCENES:

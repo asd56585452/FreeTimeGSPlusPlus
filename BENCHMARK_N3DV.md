@@ -35,3 +35,12 @@ Total time per frame 7.25 s (Init + Train; Load excluded). Single runs, no tunin
 - Treated as one 300-frame GoF in the Sheet (03_GoF_Details GoF_ID 0).
 - Uploaded to Google Sheet 2026-11-13 (01 row 16 + footnote row 17, 02 rows 50-55, 03 rows 284-289,
   04 appended 1800 rows); backup before write in /media/tsaichenghan/2TBSSD/FreeTimeGSPlusPlus/sheet_20261113.
+
+## Correction 2026-11-14: video decode excluded from Init
+For consistency with all other benchmarked methods (they read pre-extracted frames), the `extract`
+stage (ffmpeg video decode to lossless WebP, ~1.12 s/frame, inflated by the 4-worker cap) is no longer
+counted in Init. Init = sfm + prep (half-res memmap) + RoMa points + init.
+Per-scene Init s: sear_steak 685, coffee_martini 795, cook_spinach 877, cut_roasted_beef 623,
+flame_salmon_1 828, flame_steak 675. Mean: Init 2.49 + Train 3.63 = **6.13 s/frame** (was 7.25).
+Quality numbers unchanged. Sheet (01 row 16-17, 02 rows 50-55, 03 rows 284-289) updated; backup in
+/media/tsaichenghan/2TBSSD/FreeTimeGSPlusPlus/sheet_20261113/backup_before_extract_fix_20261114.
